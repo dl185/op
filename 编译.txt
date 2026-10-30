@@ -1,0 +1,106 @@
+cat > ~/lede_build.sh << 'EOF'
+cd ~/lede
+git pull
+./scripts/feeds update -a
+
+#rm -rf package/cf-ip-speed-panel
+#git clone --depth 1 https://github.com/10000ge10000/cf-ip-speed-panel.git package/cf-ip-speed-panel
+
+rm -rf package/openwrt-clashoo
+git clone --depth 1 https://github.com/kenzok8/openwrt-clashoo.git package/openwrt-clashoo
+
+#rm -rf package/openwrt-daede
+#git clone --depth 1 https://github.com/kenzok8/openwrt-daede.git package/openwrt-daede
+
+rm -rf package/luci-app-run
+git clone --depth 1 https://github.com/wukongdaily/luci-app-run.git package/luci-app-run
+
+#rm -rf package/luci-app-openclash
+#git clone --depth 1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+
+rm -rf feeds/luci/applications/luci-app-mosdns
+rm -rf package/v2ray-geodata
+git clone --depth 1 https://github.com/sbwml/luci-app-mosdns -b v5 feeds/luci/applications/luci-app-mosdns
+git clone --depth 1 https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+
+./scripts/feeds install -a
+
+make defconfig
+make download -j8
+make V=s -j$(nproc)
+EOF
+
+chmod +x ~/lede_build.sh
+
+第2步
+bash ~/lede_build.sh
+
+1--------------------------------------------------------------
+大鹅依赖--lede主目录执行
+
+cat >> .config << 'EOF'
+CONFIG_DEVEL=y
+CONFIG_KERNEL_DEBUG_INFO=y
+CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
+CONFIG_KERNEL_DEBUG_INFO_BTF=y
+CONFIG_KERNEL_CGROUPS=y
+CONFIG_KERNEL_CGROUP_BPF=y
+CONFIG_KERNEL_BPF_EVENTS=y
+CONFIG_BPF_TOOLCHAIN_HOST=y
+CONFIG_KERNEL_XDP_SOCKETS=y
+CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
+EOF
+make defconfig
+2--------------------------------------------------------------
+加入apk源
+
+mkdir -p files/etc/apk/repositories.d
+cat > files/etc/apk/repositories.d/distfeeds.list << 'EOF'
+https://downloads.openwrt.org/releases/24.10.5/targets/x86/64/packages
+https://downloads.openwrt.org/releases/24.10.5/packages/x86_64/base
+https://downloads.openwrt.org/releases/24.10.5/packages/x86_64/luci
+https://downloads.openwrt.org/releases/24.10.5/packages/x86_64/packages
+EOF
+
+
+-------------------------------------------------------------------
+
+git clone -b openwrt-25.12 --depth=1 https://github.com/openwrt/openwrt.git
+
+
+
+---------openwrt----------------
+
+cat > ~/openwrt_build.sh << 'EOF'
+cd ~/openwrt
+git pull
+./scripts/feeds update -a
+
+rm -rf package/luci-app-run
+git clone --depth 1 https://github.com/wukongdaily/luci-app-run.git package/luci-app-run
+
+#rm -rf package/luci-app-openclash
+#git clone --depth 1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash
+
+rm -rf package/mosdns
+rm -rf package/v2ray-geodata
+git clone --depth 1 https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone --depth 1 https://github.com/sbwml/v2ray-geodata package/v2ray-geodata 2>/dev/null || true
+
+./scripts/feeds install -a
+
+make defconfig
+make download -j8
+make V=s -j$(nproc)
+EOF
+
+chmod +x ~/openwrt_build.sh
+
+第2步
+bash ~/openwrt_build.sh
+
+
+
+passwall无法快进，执行下面命令---再用脚本编译
+
+rm -rf feeds/passwall_luci  
