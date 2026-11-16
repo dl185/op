@@ -4,11 +4,19 @@ cd ~/lede
 git checkout -- feeds.conf.default
 git pull
 
-# 2. 更新 feeds 并安装默认组件
+# 2. 更新 feeds 源
 ./scripts/feeds update -a
+
+# 3. 【重点】物理删除所有可能冲突的旧版 v2ray-geodata，消灭警告
+rm -rf package/feeds/packages/v2ray-geodata
+rm -rf feeds/packages/net/v2ray-geodata
+rm -rf feeds/passwall_packages/v2ray-geodata
+rm -rf package/v2ray-geodata
+
+# 4. 安装所有 feeds 组件（此时不会再报 v2ray-geodata 的警告了）
 ./scripts/feeds install -a
 
-# 3. 替换或添加其他第三方插件到 package 目录
+# 5. 克隆第三方插件到 package 目录（优先级最高）
 rm -rf package/AdZero
 git clone --depth 1 https://github.com/slobys/AdZero.git package/AdZero
 
@@ -18,18 +26,14 @@ git clone --depth 1 https://github.com/kenzok8/openwrt-clashoo.git package/openw
 rm -rf package/luci-app-run
 git clone --depth 1 https://github.com/wukongdaily/luci-app-run.git package/luci-app-run
 
-# 4. 强制替换旧版 mosdns 和 v2ray-geodata
-# 先删除 feeds 中自带的旧源码，防止包名冲突
+# 6. 强制替换旧版 mosdns 和 v2ray-geodata（使用 sbwml 的最新版）
 rm -rf feeds/luci/applications/luci-app-mosdns
-rm -rf feeds/packages/net/v2ray-geodata
-
-# 把新版直接克隆到 package 目录（优先级最高）
 rm -rf package/luci-app-mosdns
-rm -rf package/v2ray-geodata
 git clone --depth 1 https://github.com/sbwml/luci-app-mosdns -b v5 package/luci-app-mosdns
+
 git clone --depth 1 https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 
-# 5. 编译
+# 7. 开始编译
 make defconfig
 make download -j8
 make V=s -j$(nproc)
